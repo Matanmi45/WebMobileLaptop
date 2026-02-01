@@ -8,6 +8,10 @@ interface ILectureProgress {
   lastWatched: Date;
 }
 
+interface ICourseProgressMethods {
+  updateLastAccessed(): Promise<ICourseProgress>;
+}
+
 // 2. Interface for CourseProgress Document
 export interface ICourseProgress extends Document {
   user: Types.ObjectId;
@@ -20,7 +24,7 @@ export interface ICourseProgress extends Document {
   updatedAt: Date;
 
   // Methods
-  updateLastAccessed(): Promise<ICourseProgress>;
+  //updateLastAccessed(): Promise<ICourseProgress>;
 }
 
 // 3. Lecture Progress Sub-Schema
@@ -45,7 +49,11 @@ const lectureProgressSchema = new Schema<ILectureProgress>({
 });
 
 // 4. Course Progress Main Schema
-const courseProgressSchema = new Schema<ICourseProgress>(
+const courseProgressSchema = new Schema<
+  ICourseProgress,
+  Model<ICourseProgress>,
+  ICourseProgressMethods
+>(
   {
     user: {
       type: Schema.Types.ObjectId,

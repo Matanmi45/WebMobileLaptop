@@ -1,5 +1,9 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 
+interface courseVirtuals {
+  averageRating: number;
+}
+
 // 1. Define the interface for the Course document
 export interface ICourse extends Document {
   title: string;
@@ -19,11 +23,19 @@ export interface ICourse extends Document {
   updatedAt: Date;
 
   // Virtual
-  averageRating: number;
+  //averageRating: number;
 }
 
+type CourseModelType = Model<ICourse, {}, {}, {}, courseVirtuals>;
+
 // 2. Create the Schema using the interface
-const courseSchema = new Schema<ICourse>(
+const courseSchema = new Schema<
+  ICourse,
+  CourseModelType,
+  {},
+  {},
+  courseVirtuals
+>(
   {
     title: {
       type: String,

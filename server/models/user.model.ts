@@ -8,6 +8,16 @@ interface IEnrolledCourse {
   enrolledAt: Date;
 }
 
+interface UserVirtuals {
+  fullName: string;
+}
+
+interface UserMethods {
+  comparePassword(enteredPassword: string): Promise<boolean>;
+  getResetPasswordToken(): string;
+  updateLastActive(): Promise<IUser>;
+}
+
 // 2. Define the main User interface
 export interface IUser extends Document {
   name: string;
@@ -25,15 +35,23 @@ export interface IUser extends Document {
   updatedAt: Date;
 
   // Virtuals
-  totalEnrolledCourses: number;
+  //totalEnrolledCourses: number;
 
   // Instance Method Signatures
-  comparePassword(enteredPassword: string): Promise<boolean>;
-  getResetPasswordToken(): string;
-  updateLastActive(): Promise<IUser>;
+  // comparePassword(enteredPassword: string): Promise<boolean>;
+  // getResetPasswordToken(): string;
+  // updateLastActive(): Promise<IUser>;
 }
 
-const userSchema = new Schema<IUser>(
+type UserModelType = Model<IUser, {}, UserMethods, {}, UserVirtuals>;
+
+const userSchema = new Schema<
+  IUser,
+  UserModelType,
+  UserMethods,
+  {},
+  UserVirtuals
+>(
   {
     name: {
       type: String,
@@ -109,22 +127,22 @@ const userSchema = new Schema<IUser>(
 // 3. Password Encryption Hook
 userSchema.pre<IUser>("save", async function () {
   if (!this.isModified("password")) {
-    const err = new Error("Password is required");
-    throw err;
+    return;
   }
   // Use non-null assertion (!) because we know password exists if modified
   this.password = await bcrypt.hash(this.password!, 12);
 });
 
 // 4. Instance Methods
-userSchema.methods.comparePassword = async function (
-  this: IUser,
-  enteredPassword: string,
-): Promise<boolean> {
-  return await bcrypt.compare(enteredPassword, this.password!);
-};
+userSchema.method(
+  "comparePassword",
+  async function (this: IUser, enteredPassword: string): Promise<boolean> {
+    const final = await bcrypt.compare(enteredPassword, this.password!);
+    return final;
+  },
+);
 
-userSchema.methods.getResetPasswordToken = function (this: IUser): string {
+userSchema.method("getResetPasswordToken", function (this: IUser): string {
   const resetToken = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto
     .createHash("sha256")
@@ -132,12 +150,12 @@ userSchema.methods.getResetPasswordToken = function (this: IUser): string {
     .digest("hex");
   this.resetPasswordExpire = new Date(Date.now() + 10 * 60 * 1000);
   return resetToken;
-};
+});
 
-userSchema.methods.updateLastActive = function (this: IUser): Promise<IUser> {
+userSchema.method("updateLastActive", function (this: IUser): Promise<IUser> {
   this.lastActive = new Date();
   return this.save({ validateBeforeSave: false });
-};
+});
 
 // 5. Virtual Field
 userSchema.virtual("totalEnrolledCourses").get(function (this: IUser) {
@@ -145,4 +163,4 @@ userSchema.virtual("totalEnrolledCourses").get(function (this: IUser) {
 });
 
 // 6. Export Model
-export const User: Model<IUser> = mongoose.model<IUser>("User", userSchema);
+export const User = mongoose.model<IUser, UserModelType>("User", userSchema);
