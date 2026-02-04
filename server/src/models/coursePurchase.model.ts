@@ -24,28 +24,18 @@ export interface ICoursePurchase extends Document {
   createdAt: Date;
   updatedAt: Date;
 
-  // Virtual
-  //isRefundable: boolean;
-
-  // Methods
-  //processRefund(reason: string, amount?: number): Promise<ICoursePurchase>;
+ 
 }
 
-type ICoursePurchaseModel = Model<
-  ICoursePurchase,
-  {},
-  ICoursePurchaseMethods,
-  {},
-  ICoursePurchaseVirtuals
->;
+type CoursePurchaseDocument = Document & ICoursePurchase & ICoursePurchaseMethods & ICoursePurchaseVirtuals
+
+type CoursePurchaseModelType = Model<CoursePurchaseDocument, {}, ICoursePurchaseMethods>;
 
 // 2. Create the Schema
 const coursePurchaseSchema = new Schema<
   ICoursePurchase,
-  ICoursePurchaseModel,
-  ICoursePurchaseMethods,
-  {},
-  ICoursePurchaseVirtuals
+  CoursePurchaseModelType,
+  ICoursePurchaseMethods
 >(
   {
     course: {
@@ -136,5 +126,5 @@ coursePurchaseSchema.methods.processRefund = async function (
 // 6. Define and Export Model
 export const CoursePurchase = mongoose.model<
   ICoursePurchase,
-  ICoursePurchaseModel
+  CoursePurchaseModelType
 >("CoursePurchase", coursePurchaseSchema);

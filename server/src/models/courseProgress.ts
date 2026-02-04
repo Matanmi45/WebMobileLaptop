@@ -23,8 +23,7 @@ export interface ICourseProgress extends Document {
   createdAt: Date;
   updatedAt: Date;
 
-  // Methods
-  //updateLastAccessed(): Promise<ICourseProgress>;
+ 
 }
 
 // 3. Lecture Progress Sub-Schema
@@ -110,5 +109,5 @@ courseProgressSchema.methods.updateLastAccessed = function (
 };
 
 // 7. Export Model
-export const CourseProgress: Model<ICourseProgress> =
+export const CourseProgress =
   mongoose.model<ICourseProgress>("CourseProgress", courseProgressSchema);

@@ -1,6 +1,9 @@
 import mongoose, { Schema, Document, Model, Types } from "mongoose";
 import bcrypt from "bcryptjs";
-import crypto from "crypto";
+import crypto from "crypto"
+import { HydratedDocument} from "mongoose";
+
+
 
 // 1. Define interface for the sub-document
 interface IEnrolledCourse {
@@ -8,15 +11,17 @@ interface IEnrolledCourse {
   enrolledAt: Date;
 }
 
-interface UserVirtuals {
-  fullName: string;
-}
-
 interface UserMethods {
   comparePassword(enteredPassword: string): Promise<boolean>;
   getResetPasswordToken(): string;
   updateLastActive(): Promise<IUser>;
 }
+
+interface UserVirtuals {
+  totalEnrolledCourses: number;
+}
+
+
 
 // 2. Define the main User interface
 export interface IUser extends Document {
@@ -34,23 +39,18 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
 
-  // Virtuals
-  //totalEnrolledCourses: number;
 
-  // Instance Method Signatures
-  // comparePassword(enteredPassword: string): Promise<boolean>;
-  // getResetPasswordToken(): string;
-  // updateLastActive(): Promise<IUser>;
 }
 
-type UserModelType = Model<IUser, {}, UserMethods, {}, UserVirtuals>;
+//export type UserDocument = HydratedDocument<IUser, UserMethods & UserVirtuals>;
+type UserDocument = Document & IUser & UserMethods & UserVirtuals
+
+type UserModelType = Model<UserDocument, {}, UserMethods>;
 
 const userSchema = new Schema<
   IUser,
   UserModelType,
-  UserMethods,
-  {},
-  UserVirtuals
+  UserMethods
 >(
   {
     name: {
@@ -136,13 +136,13 @@ userSchema.pre<IUser>("save", async function () {
 // 4. Instance Methods
 userSchema.method(
   "comparePassword",
-  async function (this: IUser, enteredPassword: string): Promise<boolean> {
+  async function (enteredPassword: string): Promise<boolean> {
     const final = await bcrypt.compare(enteredPassword, this.password!);
     return final;
   },
 );
 
-userSchema.method("getResetPasswordToken", function (this: IUser): string {
+userSchema.method("getResetPasswordToken", function (): string {
   const resetToken = crypto.randomBytes(20).toString("hex");
   this.resetPasswordToken = crypto
     .createHash("sha256")
@@ -152,13 +152,13 @@ userSchema.method("getResetPasswordToken", function (this: IUser): string {
   return resetToken;
 });
 
-userSchema.method("updateLastActive", function (this: IUser): Promise<IUser> {
+userSchema.method("updateLastActive", function ()  {
   this.lastActive = new Date();
   return this.save({ validateBeforeSave: false });
 });
 
 // 5. Virtual Field
-userSchema.virtual("totalEnrolledCourses").get(function (this: IUser) {
+userSchema.virtual("totalEnrolledCourses").get(function () {
   return this.enrolledCourses?.length || 0;
 });
 
