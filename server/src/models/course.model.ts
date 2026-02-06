@@ -26,7 +26,7 @@ export interface ICourse extends Document {
   //averageRating: number;
 }
 
-type CourseModelType = Model<ICourse, {}, {}, {}, courseVirtuals>;
+type CourseModelType = Model<ICourse, {}, {}, courseVirtuals>;
 
 // 2. Create the Schema using the interface
 const courseSchema = new Schema<
@@ -112,7 +112,7 @@ const courseSchema = new Schema<
 );
 
 // 3. Virtual field for average rating
-courseSchema.virtual("averageRating").get(function (this: ICourse) {
+courseSchema.virtual("averageRating").get(function () {
   return 0; // Placeholder
 });
 
@@ -124,7 +124,7 @@ courseSchema.pre<ICourse>("save", function () {
 });
 
 // 5. Define and Export the Model
-export const Course: Model<ICourse> = mongoose.model<ICourse>(
+export const Course = mongoose.model<ICourse, CourseModelType>(
   "Course",
   courseSchema,
 );

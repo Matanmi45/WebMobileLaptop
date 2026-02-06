@@ -1,22 +1,28 @@
-import { body, param, query, validationResult } from 'express-validator';
-import { AppError } from './error.middleware.js';
+import { body, ContextRunner, param, query, Result, validationResult, ValidationError } from 'express-validator';
+import { AppError } from './error.middleware.ts';
+import { NextFunction, Request, Response } from 'express';
 
-export const validate = (validations) => {
-    return async (req, res, next) => {
+export const validate = (validations: ContextRunner[]) => {
+    return async (req: Request, res: Response, next: NextFunction) => {
         // Run all validations
         await Promise.all(validations.map(validation => validation.run(req)));
 
-        const errors = validationResult(req);
+        const errors: Result<ValidationError>= validationResult(req);
         if (errors.isEmpty()) {
             return next();
         }
 
-        const extractedErrors = errors.array().map(err => ({
-            field: err.path,
-            message: err.msg
-        }));
+        const extractedErrors = errors.array().map(err => {
+            if (err.type === 'field') {
+                return {
+                    field: err.path,
+                    message: err.msg
+                };
+            }
+        })
+       return {field: "unknown", message: "Validation error"};
 
-        throw new AppError('Validation failed', 400, extractedErrors);
+       
     };
 };
 
@@ -33,7 +39,7 @@ export const commonValidations = {
             .withMessage('Limit must be between 1 and 100')
     ],
     
-    objectId: (field) => 
+    objectId: (field: string | string[] | undefined) => 
         param(field)
             .isMongoId()
             .withMessage(`Invalid ${field} ID format`),

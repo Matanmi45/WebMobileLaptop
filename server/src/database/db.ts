@@ -4,6 +4,8 @@ const MAX_RETRIES = 3;
 const RETRY_INTERVAL = 5000; // 5 seconds
 
 class DatabaseConnection {
+    retryCount: number;
+    isConnected: boolean;
     constructor() {
         this.retryCount = 0;
         this.isConnected = false;
@@ -55,7 +57,7 @@ class DatabaseConnection {
             await mongoose.connect(process.env.MONGO_URI, connectionOptions);
             this.retryCount = 0; // Reset retry count on successful connection
             
-        } catch (error) {
+        } catch (error: any) {
             console.error('Failed to connect to MongoDB:', error.message);
             await this.handleConnectionError();
         }

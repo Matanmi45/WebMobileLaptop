@@ -1,5 +1,6 @@
 import { RequestHandler } from 'express';
-import { getDBStatus } from '../database/db.js';
+import { getDBStatus } from '../database/db.ts';
+
 
 export const checkHealth: RequestHandler = async (req, res) => {
     try {

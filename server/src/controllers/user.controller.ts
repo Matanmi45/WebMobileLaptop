@@ -1,19 +1,22 @@
-import { User} from "../models/user.model";
+
 //import bcrypt from "bcryptjs";
-import { generateToken } from "../utils/generateToken";
-import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary";
-import { catchAsync } from "../middleware/error.middleware";
-import { AppError } from "../middleware/error.middleware";
+import { generateToken } from "../utils/generateToken.ts";
+import { deleteMediaFromCloudinary, uploadMedia } from "../utils/cloudinary.ts";
+import { catchAsync } from "../middleware/error.middleware.ts";
+import { AppError } from "../middleware/error.middleware.ts";
 import crypto from "crypto";
 import { RequestHandler } from "express";
 import { Multer } from 'multer';
+import { User } from "../models/user.model.ts";
+import { ObjectId } from "mongoose";
 
 
 declare global {
   namespace Express {
     interface Request {
-      id: string;
+      id: string | ObjectId;
       file?: Multer.File;
+      user?: typeof User.prototype;
     }
   }
 }
